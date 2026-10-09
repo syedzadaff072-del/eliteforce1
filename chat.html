@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    >
+
+    <title>ELITE FORCE — Guild Chat</title>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #05070d;
+            --panel: #0b0f18;
+            --panel-2: #101722;
+            --border: rgba(80, 170, 255, 0.16);
+            --blue: #38a8ff;
+            --blue-2: #0077ff;
+            --green: #21e67a;
+            --red: #ff4d6d;
+            --text: #f3f7ff;
+            --muted: #7e8da5;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at 20% 10%,
+                    rgba(0, 119, 255, 0.16),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 85% 90%,
+                    rgba(0, 180, 255, 0.08),
+                    transparent 30%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    rgba(255,255,255,0.015) 1px,
+                    transparent 1px
+                );
+
+            background-size: 100% 4px;
+            pointer-events: none;
+            opacity: 0.35;
+        }
+
+        /* =================================================
+           MAIN APP
+        ================================================= */
+
+        .app {
+            width: 100%;
+            height: 100vh;
+
+            display: flex;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255,255,255,0.02),
+                    transparent
+                );
+        }
+
+        /* =================================================
+           SIDEBAR
+        ================================================= */
+
+        .sidebar {
+            width: 300px;
+            height: 100vh;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(13,19,31,0.98),
+                    rgba(5,8,14,0.98)
+                );
+
+            border-right: 1px solid var(--border);
+
+            display: flex;
+            flex-direction: column;
+
+            position: relative;
+            z-index: 5;
+        }
+
+        .brand {
+            padding: 25px 22px 20px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-small {
+            color: var(--blue);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin-bottom: 7px;
+        }
+
+        .brand-title {
+            font-size: 27px;
+            font-weight: 900;
+            letter-spacing: 3px;
+
+            text-shadow:
+                0 0 12px rgba(56,168,255,0.55);
+        }
+
+        .brand-subtitle {
+            margin-top: 7px;
+
+            color: var(--muted);
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+
+        .members-heading {
+            padding: 19px 20px 12px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .members-heading span:first-child {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #b9c7db;
+        }
+
+        .member-count {
+            min-width: 27px;
+            height: 23px;
+
+            padding: 0 7px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 20px;
+
+            background: rgba(56,168,255,0.1);
+            border: 1px solid rgba(56,168,255,0.2);
+
+            color: var(--blue);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .members {
+            flex: 1;
+            overflow-y: auto;
+            padding: 5px 10px 20px;
+        }
+
+        .members::-webkit-scrollbar,
+        .messages::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .members::-webkit-scrollbar-thumb,
+        .messages::-webkit-scrollbar-thumb {
+            background: rgba(56,168,255,0.22);
+            border-radius: 10px;
+        }
+
+        .member {
+            display: flex;
+            align-items: center;
+
+            padding: 11px 10px;
+            margin-bottom: 4px;
+
+            border: 1px solid transparent;
+            border-radius: 12px;
+
+            transition:
+                0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .member:hover {
+            background: rgba(56,168,255,0.06);
+            border-color: rgba(56,168,255,0.1);
+            transform: translateX(2px);
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #152c47,
+                    #07111e
+                );
+
+            border: 1px solid rgba(56,168,255,0.25);
+
+            color: #a9d9ff;
+
+            font-size: 13px;
+            font-weight: 900;
+
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .status-dot {
+            position: absolute;
+
+            width: 10px;
+            height: 10px;
+
+            right: -1px;
+            bottom: -1px;
+
+            border-radius: 50%;
+
+            border: 2px solid #080d15;
+
+            background: #596578;
+        }
+
+        .status-dot.online {
+            background: var(--green);
+
+            box-shadow:
+                0 0 8px rgba(33,230,122,0.8);
+        }
+
+        .member-info {
+            min-width: 0;
+            flex: 1;
+            margin-left: 11px;
+        }
+
+        .member-name-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .member-name {
+            font-size: 13px;
+            font-weight: 800;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .leader-badge {
+            font-size: 8px;
+            font-weight: 900;
+
+            padding: 3px 5px;
+
+            border-radius: 4px;
+
+            color: #bfe5ff;
+            background: rgba(56,168,255,0.12);
+
+            border: 1px solid rgba(56,168,255,0.25);
+
+            letter-spacing: 0.5px;
+        }
+
+        .member-status {
+            margin-top: 4px;
+
+            font-size: 10px;
+            letter-spacing: 0.5px;
+
+            color: var(--muted);
+        }
+
+        .member-status.online {
+            color: var(--green);
+        }
+
+        /* =================================================
+           SIDEBAR FOOTER
+        ================================================= */
+
+        .sidebar-footer {
+            padding: 15px;
+
+            border-top: 1px solid var(--border);
+        }
+
+        .current-user {
+            display: flex;
+            align-items: center;
+
+            padding: 10px;
+
+            border-radius: 12px;
+
+            background: rgba(56,168,255,0.045);
+            border: 1px solid rgba(56,168,255,0.09);
+        }
+
+        .current-user-info {
+            flex: 1;
+            min-width: 0;
+            margin-left: 10px;
+        }
+
+        .current-label {
+            color: var(--muted);
+            font-size: 9px;
+            letter-spacing: 1.5px;
+        }
+
+        .current-name {
+            margin-top: 4px;
+
+            font-size: 12px;
+            font-weight: 800;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .logout {
+            text-decoration: none;
+
+            color: #9caabd;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            padding: 8px;
+
+            border-radius: 7px;
+
+            transition: 0.2s ease;
+        }
+
+        .logout:hover {
+            color: #fff;
+            background: rgba(255,77,109,0.1);
+        }
+
+        /* =================================================
+           CHAT AREA
+        ================================================= */
+
+        .chat-area {
+            flex: 1;
+            min-width: 0;
+
+            height: 100vh;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            height: 78px;
+
+            padding: 0 25px;
+
+            display: flex;
+            align-items: center;
+
+            border-bottom: 1px solid var(--border);
+
+            background:
+                rgba(7,11,18,0.78);
+
+            backdrop-filter: blur(12px);
+
+            position: relative;
+            z-index: 2;
+        }
+
+        .header-icon {
+            width: 43px;
+            height: 43px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(56,168,255,0.18),
+                    rgba(0,119,255,0.04)
+                );
+
+            border: 1px solid rgba(56,168,255,0.22);
+
+            color: var(--blue);
+
+            font-size: 18px;
+        }
+
+        .header-info {
+            margin-left: 13px;
+        }
+
+        .header-title {
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .header-status {
+            margin-top: 5px;
+
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            color: var(--green);
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .header-status-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+            background: var(--green);
+
+            box-shadow:
+                0 0 8px rgba(33,230,122,0.7);
+        }
+
+        .header-right {
+            margin-left: auto;
+
+            color: var(--muted);
+
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        /* =================================================
+           MESSAGES
+        ================================================= */
+
+        .messages {
+            flex: 1;
+
+            overflow-y: auto;
+
+            padding: 28px 7%;
+        }
+
+        .welcome {
+            text-align: center;
+
+            padding: 12px 20px 25px;
+
+            color: var(--muted);
+
+            font-size: 10px;
+            letter-spacing: 1.5px;
+        }
+
+        .welcome-line {
+            width: 80px;
+            height: 1px;
+
+            margin: 0 auto 12px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    transparent,
+                    var(--blue),
+                    transparent
+                );
+        }
+
+        .message-row {
+            display: flex;
+
+            margin-bottom: 18px;
+
+            animation: messageIn 0.25s ease;
+        }
+
+        @keyframes messageIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(7px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+        .message-row.mine {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: min(70%, 650px);
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            margin-bottom: 5px;
+            padding-left: 3px;
+        }
+
+        .message-row.mine .message-meta {
+            justify-content: flex-end;
+            padding-right: 3px;
+        }
+
+        .message-user {
+            color: #a9b9cd;
+
+            font-size: 10px;
+            font-weight: 800;
+
+            letter-spacing: 0.5px;
+        }
+
+        .message-user.leader {
+            color: var(--blue);
+        }
+
+        .message-time {
+            color: #536176;
+            font-size: 9px;
+        }
+
+        .message-bubble {
+            padding: 11px 15px;
+
+            border-radius: 5px 15px 15px 15px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #121b28,
+                    #0d141f
+                );
+
+            border: 1px solid rgba(80,170,255,0.11);
+
+            color: #dfe8f5;
+
+            font-size: 13px;
+            line-height: 1.55;
+
+            word-break: break-word;
+
+            box-shadow:
+                0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .message-row.mine .message-bubble {
+            border-radius: 15px 5px 15px 15px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #0c4778,
+                    #07345d
+                );
+
+            border-color: rgba(56,168,255,0.3);
+
+            color: #eef8ff;
+        }
+
+        .empty-chat {
+            height: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+        }
+
+        .empty-chat-inner {
+            color: var(--muted);
+        }
+
+        .empty-icon {
+            font-size: 35px;
+            margin-bottom: 12px;
+        }
+
+        .empty-title {
+            color: #c9d5e5;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .empty-subtitle {
+            margin-top: 6px;
+            font-size: 10px;
+        }
+
+        /* =================================================
+           INPUT
+        ================================================= */
+
+        .input-area {
+            padding: 15px 7% 18px;
+
+            border-top: 1px solid var(--border);
+
+            background:
+                rgba(5,8,14,0.92);
+        }
+
+        .input-box {
+            display: flex;
+            align-items: center;
+
+            padding: 5px;
+
+            background: #0c131e;
+
+            border: 1px solid rgba(80,170,255,0.16);
+
+            border-radius: 13px;
+
+            box-shadow:
+                0 12px 35px rgba(0,0,0,0.25);
+
+            transition: 0.2s ease;
+        }
+
+        .input-box:focus-within {
+            border-color: rgba(56,168,255,0.45);
+
+            box-shadow:
+                0 0 0 3px rgba(56,168,255,0.05),
+                0 12px 35px rgba(0,0,0,0.25);
+        }
+
+        #messageInput {
+            flex: 1;
+
+            min-width: 0;
+
+            border: none;
+            outline: none;
+
+            background: transparent;
+
+            color: #eef5ff;
+
+            padding: 12px 13px;
+
+            font-size: 13px;
+        }
+
+        #messageInput::placeholder {
+            color: #56657b;
+        }
+
+        #sendButton {
+            width: 44px;
+            height: 42px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #168cff,
+                    #0066db
+                );
+
+            color: white;
+
+            font-size: 16px;
+            font-weight: 900;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 5px 18px rgba(0,119,255,0.25);
+
+            transition: 0.2s ease;
+        }
+
+        #sendButton:hover {
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 8px 22px rgba(0,119,255,0.4);
+        }
+
+        #sendButton:active {
+            transform: scale(0.96);
+        }
+
+        /* =================================================
+           TOAST
+        ================================================= */
+
+        .toast {
+            position: fixed;
+
+            right: 22px;
+            bottom: 25px;
+
+            padding: 11px 16px;
+
+            background: #111a26;
+
+            border: 1px solid rgba(56,168,255,0.2);
+
+            border-radius: 10px;
+
+            color: #dbe9f8;
+
+            font-size: 11px;
+
+            box-shadow:
+                0 15px 40px rgba(0,0,0,0.35);
+
+            transform: translateY(100px);
+            opacity: 0;
+
+            transition: 0.3s ease;
+
+            z-index: 50;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* =================================================
+           MOBILE
+        ================================================= */
+
+        @media (max-width: 750px) {
+
+            .sidebar {
+                width: 215px;
+            }
+
+            .brand {
+                padding: 20px 15px 17px;
+            }
+
+            .brand-title {
+                font-size: 20px;
+            }
+
+            .brand-small {
+                font-size: 8px;
+            }
+
+            .brand-subtitle {
+                font-size: 8px;
+            }
+
+            .members-heading {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+            .member {
+                padding: 9px 6px;
+            }
+
+            .avatar {
+                width: 34px;
+                height: 34px;
+            }
+
+            .member-name {
+                font-size: 11px;
+            }
+
+            .header-right {
+                display: none;
+            }
+
+            .chat-header {
+                padding: 0 15px;
+            }
+
+            .messages {
+                padding: 20px 15px;
+            }
+
+            .input-area {
+                padding: 10px 15px 14px;
+            }
+
+            .message-content {
+                max-width: 82%;
+            }
+
+        }
+
+        @media (max-width: 520px) {
+
+            .sidebar {
+                width: 180px;
+            }
+
+            .brand-title {
+                font-size: 17px;
+                letter-spacing: 2px;
+            }
+
+            .brand-subtitle {
+                display: none;
+            }
+
+            .members-heading span:first-child {
+                font-size: 9px;
+            }
+
+            .current-name {
+                font-size: 10px;
+            }
+
+            .logout {
+                font-size: 8px;
+            }
+
+            .header-icon {
+                width: 38px;
+                height: 38px;
+            }
+
+            .header-title {
+                font-size: 12px;
+            }
+
+            .message-bubble {
+                font-size: 12px;
+            }
+
+        }
+
+    
+        /* =================================================
+           RESPONSIVE + MOBILE CHAT (all devices)
+        ================================================= */
+        html { -webkit-text-size-adjust: 100%; }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            height: 100vh;
+            height: 100dvh;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button,
+        a,
+        input {
+            touch-action: manipulation;
+        }
+
+        /* --app-h / --app-top are kept in sync with the real visible area by JS
+           (fixes the on-screen keyboard on iPhone / Android) */
+        .app {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: var(--app-top, 0px);
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            height: var(--app-h, 100dvh);
+        }
+
+        .sidebar,
+        .chat-area {
+            height: 100%;
+        }
+
+        .chat-area {
+            position: relative;
+        }
+
+        .members,
+        .messages {
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .message-bubble {
+            overflow-wrap: anywhere;
+        }
+
+        .header-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .header-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ---- hamburger / drawer parts (hidden on desktop) ---- */
+        .menu-btn,
+        .drawer-close,
+        .sidebar-backdrop {
+            display: none;
+        }
+
+        .brand {
+            position: relative;
+        }
+
+        .menu-btn {
+            position: relative;
+            flex-shrink: 0;
+            width: 42px;
+            height: 42px;
+            margin-right: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(56,168,255,0.28);
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(56,168,255,0.16),
+                    rgba(0,119,255,0.04)
+                );
+            cursor: pointer;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .menu-btn > span:not(.menu-badge) {
+            display: block;
+            width: 18px;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--blue);
+        }
+
+        .menu-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 5px;
+            border-radius: 10px;
+            background: var(--green);
+            color: #03120a;
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 19px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(33,230,122,0.6);
+        }
+
+        .drawer-close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: #b9c7db;
+            font-size: 15px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ---- chat polish ---- */
+        .message-row.grouped {
+            margin-top: -12px;
+        }
+
+        .message-row.grouped .message-meta {
+            display: none;
+        }
+
+        .message-row.grouped .message-bubble {
+            border-radius: 15px;
+        }
+
+        .input-area {
+            position: relative;
+        }
+
+        #sendButton.is-empty {
+            opacity: 0.55;
+            box-shadow: none;
+        }
+
+        .jump-btn {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: -46px;
+            transform: translateX(-50%);
+            padding: 8px 15px;
+            border-radius: 999px;
+            border: 1px solid rgba(56,168,255,0.45);
+            background: linear-gradient(135deg, #0b2c55, #0a1b33);
+            color: #dff2ff;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            cursor: pointer;
+            z-index: 4;
+            box-shadow:
+                0 8px 24px rgba(0,0,0,0.45),
+                0 0 14px rgba(56,168,255,0.3);
+        }
+
+        .jump-btn.show {
+            display: block;
+            animation: jumpIn 0.2s ease;
+        }
+
+        @keyframes jumpIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        /* ---- tablets (landscape / small laptops) ---- */
+        @media (min-width: 821px) and (max-width: 1100px) {
+            .sidebar {
+                width: 260px;
+            }
+        }
+
+        /* ---- phones + portrait tablets: sidebar becomes a slide-in drawer ---- */
+        @media (max-width: 820px), (max-width: 1000px) and (max-height: 500px) {
+
+            .menu-btn,
+            .drawer-close {
+                display: flex;
+            }
+
+            .sidebar-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                z-index: 55;
+                background: rgba(0,0,0,0.62);
+                -webkit-backdrop-filter: blur(2px);
+                backdrop-filter: blur(2px);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+            }
+
+            body.drawer-open .sidebar-backdrop {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: min(84vw, 320px);
+                z-index: 60;
+                padding-top: env(safe-area-inset-top);
+                padding-left: env(safe-area-inset-left);
+                transform: translateX(-102%);
+                visibility: hidden;
+                transition:
+                    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    visibility 0s linear 0.28s;
+            }
+
+            body.drawer-open .sidebar {
+                transform: translateX(0);
+                visibility: visible;
+                transition-delay: 0s;
+                box-shadow: 20px 0 60px rgba(0,0,0,0.6);
+            }
+
+            /* readable sizes inside the drawer (undo the old squeezed-sidebar sizes) */
+            .brand {
+                padding: 25px 22px 18px;
+            }
+
+            .brand-small {
+                font-size: 10px;
+            }
+
+            .brand-title {
+                font-size: clamp(20px, 6.4vw, 26px);
+                letter-spacing: 2px;
+            }
+
+            .brand-subtitle {
+                display: block;
+                font-size: 10px;
+            }
+
+            .members-heading {
+                padding: 17px 20px 10px;
+            }
+
+            .members-heading span:first-child {
+                font-size: 11px;
+            }
+
+            .member {
+                padding: 11px 10px;
+            }
+
+            .avatar {
+                width: 38px;
+                height: 38px;
+            }
+
+            .member-name {
+                font-size: 13px;
+            }
+
+            .sidebar-footer {
+                padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            }
+
+            .current-name {
+                font-size: 12px;
+            }
+
+            .logout {
+                font-size: 11px;
+                padding: 10px 12px;
+            }
+
+            /* header */
+            .chat-header {
+                height: calc(60px + env(safe-area-inset-top, 0px));
+                padding-top: env(safe-area-inset-top, 0px);
+                padding-left: max(12px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+            }
+
+            .header-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+
+            .header-info {
+                margin-left: 11px;
+            }
+
+            .header-title {
+                font-size: 13px;
+            }
+
+            .header-right {
+                display: none;
+            }
+
+            /* messages */
+            .messages {
+                padding:
+                    14px
+                    max(12px, env(safe-area-inset-right))
+                    10px
+                    max(12px, env(safe-area-inset-left));
+            }
+
+            .message-row {
+                margin-bottom: 12px;
+            }
+
+            .message-row.grouped {
+                margin-top: -8px;
+            }
+
+            .message-content {
+                max-width: 86%;
+            }
+
+            .message-user {
+                font-size: 11px;
+            }
+
+            .message-time {
+                font-size: 10px;
+            }
+
+            .message-bubble {
+                font-size: 14px;
+                line-height: 1.5;
+                padding: 10px 14px;
+            }
+
+            /* input */
+            .input-area {
+                padding:
+                    10px
+                    max(12px, env(safe-area-inset-right))
+                    calc(10px + env(safe-area-inset-bottom, 0px))
+                    max(12px, env(safe-area-inset-left));
+            }
+
+            #messageInput {
+                font-size: 16px;      /* stops iOS zoom on focus */
+                padding: 12px;
+            }
+
+            #sendButton {
+                width: 46px;
+                height: 44px;
+                flex-shrink: 0;
+            }
+
+            /* toast on top so it never covers the input */
+            .toast {
+                left: 12px;
+                right: 12px;
+                bottom: auto;
+                top: calc(env(safe-area-inset-top, 0px) + 68px);
+                text-align: center;
+                transform: translateY(-140px);
+            }
+
+            .toast.show {
+                transform: translateY(0);
+            }
+        }
+
+        /* ---- small phones ---- */
+        @media (max-width: 520px) {
+            .header-icon {
+                display: none;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header-title {
+                font-size: 12px;
+                letter-spacing: 0.5px;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+
+        /* ---- phones in landscape (very little height) ---- */
+        @media (max-width: 920px) and (max-height: 480px) {
+            .chat-header {
+                height: calc(48px + env(safe-area-inset-top, 0px));
+            }
+
+            .header-icon {
+                display: none;
+            }
+
+            .menu-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .message-bubble {
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+
+            .input-area {
+                padding-top: 6px;
+                padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+            }
+
+            #messageInput {
+                padding: 9px 12px;
+            }
+
+            #sendButton {
+                height: 38px;
+            }
+        }
+
+        /* ---- touch screens: no sticky hover effects ---- */
+        @media (hover: none) {
+            .member:hover {
+                transform: none;
+            }
+
+            #sendButton:hover {
+                transform: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
+    {% include '_pwa_head.html' %}
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="brand">
+
+            <button type="button" class="drawer-close" id="drawerClose" aria-label="Close members">✕</button>
+
+
+            <div class="brand-small">
+                GUILD COMMUNICATION
+            </div>
+
+            <div class="brand-title">
+                ELITE FORCE
+            </div>
+
+            <div class="brand-subtitle">
+                UNITED • CONNECTED • ELITE
+            </div>
+
+        </div>
+
+
+        <div class="members-heading">
+
+            <span>GUILD MEMBERS</span>
+
+            <span
+                class="member-count"
+                id="memberCount"
+            >
+                {{ members|length }}
+            </span>
+
+        </div>
+
+
+        <div
+            class="members"
+            id="membersList"
+        >
+
+            {% for member in members %}
+
+                <div
+                    class="member"
+                    data-user-id="{{ member.id }}"
+                    data-username="{{ member.username }}"
+                >
+
+                    <div class="avatar">
+
+                        {{ member.username[0]|upper }}
+
+                        <span
+                            class="status-dot {% if member.id in online_ids %}online{% endif %}"
+                        ></span>
+
+                    </div>
+
+
+                    <div class="member-info">
+
+                        <div class="member-name-row">
+
+                            <div class="member-name">
+                                {{ member.username }}
+                            </div>
+
+                            {% if member.role == "admin" %}
+
+                                <div class="leader-badge">
+                                    👑 LEADER
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div
+                            class="member-status {% if member.id in online_ids %}online{% endif %}"
+                        >
+
+                            {% if member.id in online_ids %}
+                                ONLINE
+                            {% else %}
+                                OFFLINE
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div class="sidebar-footer">
+
+            <div class="current-user">
+
+                <div class="avatar">
+
+                    {{ current_user.username[0]|upper }}
+
+                    <span class="status-dot online"></span>
+
+                </div>
+
+
+                <div class="current-user-info">
+
+                    <div class="current-label">
+                        LOGGED IN AS
+                    </div>
+
+                    <div class="current-name">
+                        {{ current_user.username }}
+                    </div>
+
+                </div>
+
+
+                <a
+                    href="{{ url_for('logout') }}"
+                    class="logout"
+                >
+                    EXIT
+                </a>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         CHAT
+    ====================================================== -->
+
+    <main class="chat-area">
+
+
+        <header class="chat-header">
+
+            <button type="button" class="menu-btn" id="menuBtn" aria-label="Show guild members" aria-controls="sidebar" aria-expanded="false">
+                <span></span><span></span><span></span>
+                <span class="menu-badge" id="onlineBadge">0</span>
+            </button>
+
+            <div class="header-icon">
+                💬
+            </div>
+
+
+            <div class="header-info">
+
+                <div class="header-title">
+                    ELITE FORCE GUILD CHAT
+                </div>
+
+                <div class="header-status">
+
+                    <span class="header-status-dot"></span>
+
+                    <span id="connectionStatus">
+                        CONNECTING
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="header-right">
+                PRIVATE GUILD CHANNEL
+            </div>
+
+        </header>
+
+
+        <!-- =================================================
+             MESSAGE AREA
+        ================================================== -->
+
+        <section
+            class="messages"
+            id="messages"
+        >
+
+            <div class="welcome">
+
+                <div class="welcome-line"></div>
+
+                WELCOME TO THE ELITE FORCE GUILD CHAT
+
+            </div>
+
+
+            {% if messages %}
+
+                {% for message in messages %}
+
+                    <div
+                        class="message-row {% if message.username == current_user.username %}mine{% endif %}"
+                        data-user="{{ message.username }}"
+                    >
+
+                        <div class="message-content">
+
+                            <div class="message-meta">
+
+                                <span
+                                    class="message-user {% for member in members %}{% if member.username == message.username and member.role == 'admin' %}leader{% endif %}{% endfor %}"
+                                >
+                                    {% for member in members %}
+                                        {% if member.username == message.username and member.role == "admin" %}
+                                            👑
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {{ message.username }}
+                                </span>
+
+                                <span class="message-time">
+                                    {{ message.created_at.strftime("%H:%M") }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="message-bubble">
+                                {{ message.message }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div
+                    class="empty-chat"
+                    id="emptyChat"
+                >
+
+                    <div class="empty-chat-inner">
+
+                        <div class="empty-icon">
+                            💬
+                        </div>
+
+                        <div class="empty-title">
+                            No messages yet
+                        </div>
+
+                        <div class="empty-subtitle">
+                            Start the conversation with your guild.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- =================================================
+             MESSAGE INPUT
+        ================================================== -->
+
+        <div class="input-area">
+
+            <button type="button" class="jump-btn" id="jumpBtn">↓ New messages</button>
+
+
+            <form
+                class="input-box"
+                id="messageForm"
+            >
+
+                <input
+                    type="text"
+                    id="messageInput"
+                    maxlength="1000"
+                    autocomplete="off"
+                    enterkeyhint="send"
+                    autocapitalize="sentences"
+                    placeholder="Type a message to your guild..."
+                >
+
+                <button
+                    type="submit"
+                    id="sendButton"
+                    title="Send message"
+                >
+                    ➤
+                </button>
+
+            </form>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- =====================================================
+     TOAST
+====================================================== -->
+
+<div
+    class="toast"
+    id="toast"
+></div>
+
+
+<script>
+
+    // =====================================================
+    // SOCKET CONNECTION
+    // =====================================================
+
+    const socket = io();
+
+
+    // =====================================================
+    // CURRENT USER
+    // =====================================================
+
+    const currentUsername =
+        {{ current_user.username|tojson }};
+
+
+    // =====================================================
+    // ELEMENTS
+    // =====================================================
+
+    const messagesBox =
+        document.getElementById("messages");
+
+    const messageForm =
+        document.getElementById("messageForm");
+
+    const messageInput =
+        document.getElementById("messageInput");
+
+    const membersList =
+        document.getElementById("membersList");
+
+    const memberCount =
+        document.getElementById("memberCount");
+
+    const connectionStatus =
+        document.getElementById("connectionStatus");
+
+    const toast =
+        document.getElementById("toast");
+
+
+    // =====================================================
+    // TOAST
+    // =====================================================
+
+    function showToast(text) {
+
+        toast.textContent = text;
+
+        toast.classList.add("show");
+
+        setTimeout(() => {
+
+            toast.classList.remove("show");
+
+        }, 2500);
+
+    }
+
+
+    // =====================================================
+    // SCROLL TO BOTTOM
+    // =====================================================
+
+    function scrollToBottom(smooth) {
+        if (smooth && messagesBox.scrollTo) {
+            messagesBox.scrollTo({
+                top: messagesBox.scrollHeight,
+                behavior: "smooth"
+            });
+        } else {
+            messagesBox.scrollTop =
+                messagesBox.scrollHeight;
+        }
+    }
+
+
+    // =====================================================
+    // ADD MESSAGE
+    // =====================================================
+
+    function addMessage(
+        username,
+        message,
+        time,
+        isMine = false,
+        isLeader = false
+    ) {
+
+        const emptyChat =
+            document.getElementById("emptyChat");
+
+        if (emptyChat) {
+            emptyChat.remove();
+        }
+
+
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "message-row" +
+            (isMine ? " mine" : "");
+
+
+        const content =
+            document.createElement("div");
+
+        content.className =
+            "message-content";
+
+
+        const meta =
+            document.createElement("div");
+
+        meta.className =
+            "message-meta";
+
+
+        const user =
+            document.createElement("span");
+
+        user.className =
+            "message-user" +
+            (isLeader ? " leader" : "");
+
+
+        if (isLeader) {
+
+            user.textContent =
+                "👑 " + username;
+
+        } else {
+
+            user.textContent =
+                username;
+
+        }
+
+
+        const messageTime =
+            document.createElement("span");
+
+        messageTime.className =
+            "message-time";
+
+        messageTime.textContent =
+            time || "";
+
+
+        meta.appendChild(user);
+        meta.appendChild(messageTime);
+
+
+        const bubble =
+            document.createElement("div");
+
+        bubble.className =
+            "message-bubble";
+
+        // textContent prevents HTML injection
+        bubble.textContent =
+            message;
+
+
+        content.appendChild(meta);
+        content.appendChild(bubble);
+
+        row.appendChild(content);
+
+        const stickToEnd = isMine || isNearBottom();
+
+        row.dataset.user = username;
+        groupWithPrevious(row);
+
+        messagesBox.appendChild(row);
+
+        if (stickToEnd) {
+            scrollToBottom();
+            hideJump();
+        } else {
+            showJump();
+        }
+
+    }
+
+
+    // =====================================================
+    // SEND MESSAGE
+    // =====================================================
+
+    messageForm.addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+
+            const message =
+                messageInput.value.trim();
+
+
+            if (!message) {
+                return;
+            }
+
+
+            socket.emit(
+                "send_message",
+                {
+                    message: message
+                }
+            );
+
+
+            messageInput.value = "";
+
+            messageInput.focus();
+
+        }
+    );
+
+
+    // =====================================================
+    // ENTER = SEND
+    // SHIFT + ENTER = NORMAL
+    // =====================================================
+
+    messageInput.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                messageForm.requestSubmit();
+
+            }
+
+        }
+    );
+
+
+    // =====================================================
+    // NEW MESSAGE
+    // =====================================================
+
+    socket.on(
+        "new_message",
+        function(data) {
+
+            addMessage(
+                data.username,
+                data.message,
+                data.created_at,
+                data.username === currentUsername,
+                data.is_admin === true
+            );
+
+
+            if (
+                data.username !== currentUsername
+            ) {
+
+                showToast(
+                    "💬 New message from " +
+                    data.username
+                );
+
+            }
+
+        }
+    );
+
+
+    // =====================================================
+    // UPDATE MEMBER PRESENCE
+    // =====================================================
+
+    socket.on(
+        "presence_update",
+        function(data) {
+
+            if (!data || !data.members) {
+                return;
+            }
+
+
+            memberCount.textContent =
+                data.members.length;
+
+
+            membersList.innerHTML = "";
+
+
+            data.members.forEach(
+                function(member) {
+
+                    const memberDiv =
+                        document.createElement("div");
+
+                    memberDiv.className =
+                        "member";
+
+                    memberDiv.dataset.userId =
+                        member.id;
+
+                    memberDiv.dataset.username =
+                        member.username;
+
+
+                    const avatar =
+                        document.createElement("div");
+
+                    avatar.className =
+                        "avatar";
+
+
+                    avatar.textContent =
+                        member.username
+                            .charAt(0)
+                            .toUpperCase();
+
+
+                    const statusDot =
+                        document.createElement("span");
+
+                    statusDot.className =
+                        "status-dot" +
+                        (
+                            member.online
+                                ? " online"
+                                : ""
+                        );
+
+
+                    avatar.appendChild(
+                        statusDot
+                    );
+
+
+                    const info =
+                        document.createElement("div");
+
+                    info.className =
+                        "member-info";
+
+
+                    const nameRow =
+                        document.createElement("div");
+
+                    nameRow.className =
+                        "member-name-row";
+
+
+                    const name =
+                        document.createElement("div");
+
+                    name.className =
+                        "member-name";
+
+                    name.textContent =
+                        member.username;
+
+
+                    nameRow.appendChild(name);
+
+
+                    if (
+                        member.role === "admin"
+                    ) {
+
+                        const badge =
+                            document.createElement("div");
+
+                        badge.className =
+                            "leader-badge";
+
+                        badge.textContent =
+                            "👑 LEADER";
+
+                        nameRow.appendChild(
+                            badge
+                        );
+
+                    }
+
+
+                    const status =
+                        document.createElement("div");
+
+                    status.className =
+                        "member-status" +
+                        (
+                            member.online
+                                ? " online"
+                                : ""
+                        );
+
+                    status.textContent =
+                        member.online
+                            ? "ONLINE"
+                            : "OFFLINE";
+
+
+                    info.appendChild(
+                        nameRow
+                    );
+
+                    info.appendChild(
+                        status
+                    );
+
+
+                    memberDiv.appendChild(
+                        avatar
+                    );
+
+                    memberDiv.appendChild(
+                        info
+                    );
+
+
+                    membersList.appendChild(
+                        memberDiv
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    // =====================================================
+    // CONNECTED
+    // =====================================================
+
+    socket.on(
+        "connect",
+        function() {
+
+            connectionStatus.textContent =
+                "CONNECTED";
+
+            connectionStatus.style.color =
+                "#21e67a";
+
+
+            socket.emit(
+                "join"
+            );
+
+        }
+    );
+
+
+    // =====================================================
+    // DISCONNECTED
+    // =====================================================
+
+    socket.on(
+        "disconnect",
+        function() {
+
+            connectionStatus.textContent =
+                "RECONNECTING...";
+
+            connectionStatus.style.color =
+                "#ffb020";
+
+        }
+    );
+
+
+    // =====================================================
+    // CONNECTION ERROR
+    // =====================================================
+
+    socket.on(
+        "connect_error",
+        function() {
+
+            connectionStatus.textContent =
+                "CONNECTION ERROR";
+
+            connectionStatus.style.color =
+                "#ff4d6d";
+
+        }
+    );
+
+
+    // =====================================================
+    // INITIAL SCROLL
+    // =====================================================
+
+    window.addEventListener(
+        "load",
+        function() {
+
+            scrollToBottom();
+
+            if (!window.matchMedia("(pointer: coarse)").matches) {
+                messageInput.focus();
+            }
+
+        }
+    );
+
+
+    // =====================================================
+    // RESPONSIVE / MOBILE CHAT
+    // =====================================================
+
+    let unreadBelow = 0;
+
+    const jumpBtn = document.getElementById("jumpBtn");
+
+    function showJump() {
+        unreadBelow += 1;
+        jumpBtn.textContent =
+            "↓ " + unreadBelow +
+            (unreadBelow === 1 ? " new message" : " new messages");
+        jumpBtn.classList.add("show");
+    }
+
+    function hideJump() {
+        unreadBelow = 0;
+        jumpBtn.classList.remove("show");
+    }
+
+    function isNearBottom() {
+        return (
+            messagesBox.scrollHeight -
+            messagesBox.scrollTop -
+            messagesBox.clientHeight
+        ) < 120;
+    }
+
+    // same sender in a row -> compact bubbles, no repeated name
+    function groupWithPrevious(row) {
+        const prev = row.previousElementSibling || messagesBox.lastElementChild;
+        if (
+            prev &&
+            prev.classList.contains("message-row") &&
+            prev.dataset.user === row.dataset.user
+        ) {
+            row.classList.add("grouped");
+        }
+    }
+
+    messagesBox
+        .querySelectorAll(".message-row")
+        .forEach(groupWithPrevious);
+
+    jumpBtn.addEventListener("click", function () {
+        scrollToBottom(true);
+        hideJump();
+    });
+
+    messagesBox.addEventListener(
+        "scroll",
+        function () {
+            if (isNearBottom()) {
+                hideJump();
+            }
+        },
+        { passive: true }
+    );
+
+    // ---- send button looks inactive while input is empty ----
+    const sendButton = document.getElementById("sendButton");
+
+    function syncSendButton() {
+        sendButton.classList.toggle(
+            "is-empty",
+            messageInput.value.trim() === ""
+        );
+    }
+
+    messageInput.addEventListener("input", syncSendButton);
+    messageForm.addEventListener("submit", syncSendButton);
+    syncSendButton();
+
+    // ---- members drawer (phones / portrait tablets) ----
+    const menuBtn = document.getElementById("menuBtn");
+    const drawerClose = document.getElementById("drawerClose");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    const onlineBadge = document.getElementById("onlineBadge");
+    const drawerQuery = window.matchMedia(
+        "(max-width: 820px), (max-width: 1000px) and (max-height: 500px)"
+    );
+
+    function setDrawer(open) {
+        document.body.classList.toggle("drawer-open", open);
+        menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    menuBtn.addEventListener("click", function () {
+        setDrawer(!document.body.classList.contains("drawer-open"));
+    });
+    drawerClose.addEventListener("click", function () { setDrawer(false); });
+    backdrop.addEventListener("click", function () { setDrawer(false); });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            setDrawer(false);
+        }
+    });
+
+    window.addEventListener("resize", function () {
+        if (!drawerQuery.matches) {
+            setDrawer(false);
+        }
+    });
+
+    // swipe right from the left edge = open, swipe left = close
+    let touchX = null;
+    let touchY = null;
+
+    document.addEventListener(
+        "touchstart",
+        function (event) {
+            touchX = event.touches[0].clientX;
+            touchY = event.touches[0].clientY;
+        },
+        { passive: true }
+    );
+
+    document.addEventListener(
+        "touchend",
+        function (event) {
+            if (touchX === null || !drawerQuery.matches) {
+                touchX = null;
+                return;
+            }
+
+            const dx = event.changedTouches[0].clientX - touchX;
+            const dy = event.changedTouches[0].clientY - touchY;
+
+            if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+                if (dx > 0 && touchX < 28) {
+                    setDrawer(true);
+                } else if (dx < 0) {
+                    setDrawer(false);
+                }
+            }
+
+            touchX = null;
+        },
+        { passive: true }
+    );
+
+    // ---- online count on the menu button ----
+    function updateOnlineBadge() {
+        onlineBadge.textContent =
+            membersList.querySelectorAll(".status-dot.online").length;
+    }
+
+    socket.on("presence_update", updateOnlineBadge);
+    updateOnlineBadge();
+
+    // ---- keep the layout inside the visible area (on-screen keyboard) ----
+    const rootEl = document.documentElement;
+    let stickToBottom = true;
+
+    messagesBox.addEventListener(
+        "scroll",
+        function () { stickToBottom = isNearBottom(); },
+        { passive: true }
+    );
+
+    function fitViewport() {
+        const vv = window.visualViewport;
+        let height = window.innerHeight;
+        let top = 0;
+
+        if (vv && vv.scale <= 1.01) {
+            height = vv.height;
+            top = vv.offsetTop;
+        }
+
+        rootEl.style.setProperty("--app-h", Math.round(height) + "px");
+        rootEl.style.setProperty("--app-top", Math.round(top) + "px");
+
+        if (stickToBottom) {
+            scrollToBottom();
+        }
+    }
+
+    window.addEventListener("resize", fitViewport);
+    window.addEventListener("orientationchange", function () {
+        setTimeout(fitViewport, 250);
+    });
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", fitViewport);
+        window.visualViewport.addEventListener("scroll", fitViewport);
+    }
+
+    messageInput.addEventListener("focus", function () {
+        setTimeout(function () {
+            window.scrollTo(0, 0);
+            if (stickToBottom) {
+                scrollToBottom();
+            }
+        }, 300);
+    });
+
+    fitViewport();
+</script>
+
+    {% with pwa_bottom='96px' %}{% include '_pwa_install.html' %}{% endwith %}
+</body>
+</html>

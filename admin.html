@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>ELITE FORCE — Admin Panel</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(0,140,255,.15), transparent 30%),
+                radial-gradient(circle at 80% 80%, rgba(0,255,200,.07), transparent 30%),
+                #05080d;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .topbar {
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 35px;
+            background: rgba(5,10,17,.95);
+            border-bottom: 1px solid rgba(0,170,255,.18);
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            text-shadow:
+                0 0 10px #009dff,
+                0 0 25px rgba(0,157,255,.5);
+        }
+
+        .admin-label {
+            color: #55bdff;
+            font-size: 10px;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chat-link, .logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            transition: .2s;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        .chat-link {
+            color: #bfe7ff;
+            background: rgba(0,157,255,.12);
+            border: 1px solid rgba(0,157,255,.42);
+        }
+
+        .chat-link:hover {
+            background: rgba(0,157,255,.22);
+            border-color: #38a8ff;
+        }
+
+        .logout {
+            color: #ff7777;
+            border: 1px solid rgba(255,70,70,.3);
+        }
+
+        .logout:hover {
+            background: rgba(255,70,70,.1);
+            border-color: #ff5555;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .heading {
+            margin-bottom: 30px;
+        }
+
+        .heading h1 {
+            font-size: 30px;
+            letter-spacing: 3px;
+        }
+
+        .heading p {
+            color: #668496;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .alert {
+            padding: 13px 16px;
+            border-radius: 9px;
+            margin-bottom: 20px;
+            background: rgba(0,157,255,.08);
+            border: 1px solid rgba(0,157,255,.2);
+            color: #75caff;
+            font-size: 12px;
+        }
+
+        .card {
+            background: rgba(7,13,21,.85);
+            border: 1px solid rgba(0,170,255,.13);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,.25);
+        }
+
+        .card-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-size: 15px;
+            letter-spacing: 2px;
+        }
+
+        .count {
+            color: #52bfff;
+            font-size: 11px;
+        }
+
+        .member {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 22px;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+        }
+
+        .member:last-child {
+            border-bottom: none;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#0077ff,#00d9ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0,160,255,.25);
+        }
+
+        .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .username {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .details {
+            color: #60798a;
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            border: none;
+            padding: 9px 13px;
+            border-radius: 7px;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: .25s;
+        }
+
+        .approve {
+            background: rgba(45,210,120,.14);
+            border: 1px solid rgba(45,210,120,.35);
+            color: #55e995;
+        }
+
+        .approve:hover {
+            background: rgba(45,210,120,.25);
+        }
+
+        .block {
+            background: rgba(255,180,40,.1);
+            border: 1px solid rgba(255,180,40,.3);
+            color: #ffc45c;
+        }
+
+        .block:hover {
+            background: rgba(255,180,40,.2);
+        }
+
+        .remove {
+            background: rgba(255,60,60,.1);
+            border: 1px solid rgba(255,60,60,.3);
+            color: #ff7777;
+        }
+
+        .remove:hover {
+            background: rgba(255,60,60,.2);
+        }
+
+        .empty {
+            padding: 50px 20px;
+            text-align: center;
+            color: #526a7a;
+            font-size: 12px;
+        }
+
+        @media(max-width:700px) {
+
+            .topbar {
+                padding: 10px 12px;
+                gap: 10px;
+                min-height: 70px;
+                height: auto;
+            }
+
+            .topbar-actions {
+                gap: 6px;
+            }
+
+            .chat-link, .logout {
+                min-height: 38px;
+                padding: 9px 10px;
+                font-size: 10px;
+            }
+
+            .logo {
+                font-size: 16px;
+            }
+
+            .container {
+                padding: 25px 12px;
+            }
+
+            .member {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .actions {
+                width: 100%;
+                margin-left: 60px;
+            }
+
+            .btn {
+                flex: 1;
+            }
+        }
+    
+
+        @media (max-width: 420px) {
+            .topbar { align-items: flex-start; }
+            .admin-label { font-size: 8px; letter-spacing: 1px; }
+            .topbar-actions { flex-direction: column; align-items: stretch; }
+            .chat-link, .logout { min-height: 34px; padding: 7px 8px; font-size: 9px; }
+        }
+
+        /* =================================================
+           RESPONSIVE (all devices)
+        ================================================= */
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .topbar {
+            min-height: 75px;
+            height: auto;
+            padding-top: env(safe-area-inset-top);
+            padding-left: max(35px, env(safe-area-inset-left));
+            padding-right: max(35px, env(safe-area-inset-right));
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .container {
+            padding-left: max(20px, env(safe-area-inset-left));
+            padding-right: max(20px, env(safe-area-inset-right));
+            padding-bottom: max(40px, env(safe-area-inset-bottom));
+        }
+
+        .heading h1 {
+            font-size: clamp(20px, 6vw, 30px);
+            letter-spacing: clamp(1px, 0.6vw, 3px);
+        }
+
+        .username,
+        .details {
+            overflow-wrap: anywhere;
+        }
+
+        .btn {
+            touch-action: manipulation;
+        }
+
+        @media (max-width: 700px) {
+            .topbar {
+                min-height: 62px;
+                padding-left: max(15px, env(safe-area-inset-left));
+                padding-right: max(15px, env(safe-area-inset-right));
+            }
+            .card-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .member {
+                padding: 16px 14px;
+            }
+            .actions {
+                flex-wrap: wrap;
+            }
+            .btn {
+                min-height: 42px;
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .actions {
+                margin-left: 0;
+            }
+            .btn {
+                flex: 1 1 100%;
+            }
+        }
+
+        @media (min-width: 701px) and (max-width: 1024px) {
+            .container { padding-top: 30px; }
+        }
+    </style>
+    {% include '_pwa_head.html' %}
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div>
+        <div class="logo">ELITE FORCE</div>
+        <div class="admin-label">GUILD LEADER PANEL</div>
+    </div>
+
+    <nav class="topbar-actions" aria-label="Admin navigation">
+        <a href="{{ url_for('chat') }}" class="chat-link">💬 OPEN GUILD CHAT</a>
+        <a href="{{ url_for('logout') }}" class="logout">LOGOUT</a>
+    </nav>
+
+</header>
+
+
+<div class="container">
+
+    <div class="heading">
+        <h1>ADMIN CONTROL</h1>
+        <p>Manage ELITE FORCE guild members</p>
+    </div>
+
+
+    {% with messages = get_flashed_messages() %}
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div class="alert">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h2>GUILD MEMBERS</h2>
+
+            <div class="count">
+                {{ users|length }} MEMBERS
+            </div>
+
+        </div>
+
+
+        {% if users %}
+
+            {% for user in users %}
+
+                <div class="member">
+
+                    <div class="avatar">
+                        {{ user.username[0]|upper }}
+                    </div>
+
+                    <div class="info">
+
+                        <div class="username">
+                            {{ user.username }}
+                        </div>
+
+                        <div class="details">
+
+                            {% if user.approved %}
+                                STATUS: APPROVED
+                            {% else %}
+                                STATUS: PENDING
+                            {% endif %}
+
+                            &nbsp; • &nbsp;
+
+                            {% if user.blocked %}
+                                BLOCKED
+                            {% else %}
+                                ACTIVE
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        {% if not user.approved and not user.blocked %}
+
+                            <a
+                                href="/admin/approve/{{ user.id }}"
+                                class="btn approve"
+                            >
+                                APPROVE
+                            </a>
+
+                        {% endif %}
+
+
+                        {% if not user.blocked %}
+
+                            <a
+                                href="/admin/block/{{ user.id }}"
+                                class="btn block"
+                            >
+                                BLOCK
+                            </a>
+
+                        {% endif %}
+
+
+                        <a
+                            href="/admin/remove/{{ user.id }}"
+                            class="btn remove"
+                            onclick="return confirm('Remove this member from ELITE FORCE?');"
+                        >
+                            REMOVE
+                        </a>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty">
+                NO GUILD MEMBERS FOUND
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+    {% include '_pwa_install.html' %}
+</body>
+</html>

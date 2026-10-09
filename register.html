@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>ELITE FORCE — Join Guild</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+
+            background:
+                radial-gradient(circle at 20% 20%, rgba(0,140,255,.18), transparent 30%),
+                radial-gradient(circle at 80% 80%, rgba(0,255,200,.08), transparent 30%),
+                #05080d;
+
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* BACKGROUND GLOW */
+
+        .glow {
+            position: fixed;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: rgba(0,140,255,.08);
+            filter: blur(80px);
+            animation: moveGlow 7s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes moveGlow {
+
+            0% {
+                transform: translate(-220px,-100px);
+            }
+
+            100% {
+                transform: translate(220px,100px);
+            }
+        }
+
+
+        /* CARD */
+
+        .card {
+
+            width: 410px;
+            max-width: calc(100% - 30px);
+
+            padding: 42px 35px;
+
+            background: rgba(7,13,21,.88);
+
+            border: 1px solid rgba(0,170,255,.2);
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 0 40px rgba(0,120,255,.08),
+                0 25px 80px rgba(0,0,0,.45);
+
+            backdrop-filter: blur(15px);
+
+            position: relative;
+
+            animation: cardIn .7s ease;
+        }
+
+        @keyframes cardIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+
+        /* LOGO */
+
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logo h1 {
+
+            font-size: 29px;
+
+            letter-spacing: 5px;
+
+            text-shadow:
+                0 0 10px #009dff,
+                0 0 25px rgba(0,157,255,.5);
+
+        }
+
+        .logo p {
+
+            margin-top: 8px;
+
+            color: #5dbdff;
+
+            font-size: 9px;
+
+            letter-spacing: 3px;
+        }
+
+
+        .title {
+
+            text-align: center;
+
+            margin-top: 30px;
+
+            margin-bottom: 25px;
+        }
+
+        .title h2 {
+
+            font-size: 18px;
+
+            letter-spacing: 2px;
+        }
+
+        .title p {
+
+            margin-top: 7px;
+
+            color: #60798a;
+
+            font-size: 11px;
+        }
+
+
+        /* FLASH MESSAGE */
+
+        .flash {
+
+            padding: 11px 13px;
+
+            margin-bottom: 16px;
+
+            border-radius: 8px;
+
+            background: rgba(255,70,70,.08);
+
+            border: 1px solid rgba(255,70,70,.25);
+
+            color: #ff9696;
+
+            font-size: 11px;
+
+            text-align: center;
+        }
+
+
+        /* INPUT */
+
+        .field {
+
+            margin-bottom: 17px;
+        }
+
+        .field label {
+
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #7590a1;
+
+            font-size: 10px;
+
+            letter-spacing: 1.5px;
+        }
+
+        .field input {
+
+            width: 100%;
+
+            padding: 14px 15px;
+
+            border-radius: 9px;
+
+            border: 1px solid rgba(0,170,255,.16);
+
+            background: rgba(255,255,255,.035);
+
+            color: white;
+
+            outline: none;
+
+            font-size: 14px;
+
+            transition: .25s;
+        }
+
+        .field input:focus {
+
+            border-color: #009dff;
+
+            background: rgba(0,150,255,.04);
+
+            box-shadow:
+                0 0 15px rgba(0,157,255,.12);
+        }
+
+
+        /* BUTTON */
+
+        .join-btn {
+
+            width: 100%;
+
+            padding: 14px;
+
+            margin-top: 7px;
+
+            border: none;
+
+            border-radius: 9px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0077ff,
+                    #00bfff
+                );
+
+            color: white;
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+            letter-spacing: 2px;
+
+            cursor: pointer;
+
+            transition: .25s;
+
+            box-shadow:
+                0 8px 25px rgba(0,120,255,.18);
+        }
+
+        .join-btn:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 12px 30px rgba(0,150,255,.32);
+        }
+
+
+        /* LOGIN LINK */
+
+        .login {
+
+            text-align: center;
+
+            margin-top: 22px;
+
+            color: #60798a;
+
+            font-size: 11px;
+        }
+
+        .login a {
+
+            color: #55bdff;
+
+            text-decoration: none;
+
+            font-weight: bold;
+
+        }
+
+        .login a:hover {
+
+            text-decoration: underline;
+
+        }
+
+
+        /* FOOTER */
+
+        .footer {
+
+            text-align: center;
+
+            margin-top: 22px;
+
+            color: #344a58;
+
+            font-size: 8px;
+
+            letter-spacing: 2px;
+        }
+
+
+        /* MOBILE */
+
+        @media(max-width:500px) {
+
+            .card {
+
+                padding: 35px 24px;
+            }
+
+            .logo h1 {
+
+                font-size: 24px;
+            }
+
+        }
+
+    
+        /* =================================================
+           RESPONSIVE (all devices)
+        ================================================= */
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            align-items: flex-start;          /* tall cards never get cut off */
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding:
+                max(15px, env(safe-area-inset-top))
+                max(0px, env(safe-area-inset-right))
+                max(15px, env(safe-area-inset-bottom))
+                max(0px, env(safe-area-inset-left));
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card {
+            margin: auto;                     /* centred when it fits, scrollable when not */
+        }
+
+        .glow {
+            width: min(450px, 100vw);
+            height: min(450px, 100vw);
+        }
+
+        .logo h1 {
+            font-size: clamp(22px, 7.4vw, 29px);
+            letter-spacing: clamp(2px, 1.2vw, 5px);
+        }
+
+        .card input,
+        .card select,
+        .card textarea {
+            font-size: 16px;                  /* stops iOS zoom on focus */
+            min-height: 48px;
+        }
+
+        .join-btn {
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+
+        @media (max-width: 380px) {
+            .card { padding: 28px 18px; }
+        }
+
+        @media (max-height: 640px) {
+            .card { padding-top: 24px; padding-bottom: 24px; }
+            .title { margin-top: 18px; margin-bottom: 16px; }
+        }
+
+        @media (min-width: 1400px) {
+            .card { width: 450px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+        }
+    </style>
+    {% include '_pwa_head.html' %}
+</head>
+
+
+<body>
+
+<div class="glow"></div>
+
+
+<div class="card">
+
+    <div class="logo">
+
+        <h1>
+            ELITE FORCE
+        </h1>
+
+        <p>
+            GUILD COMMUNICATION SYSTEM
+        </p>
+
+    </div>
+
+
+    <div class="title">
+
+        <h2>
+            JOIN THE GUILD
+        </h2>
+
+        <p>
+            Create your account and request access
+        </p>
+
+    </div>
+
+
+    {% with messages = get_flashed_messages() %}
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div class="flash">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <form method="POST" action="/register">
+
+        <div class="field">
+
+            <label>
+                USERNAME
+            </label>
+
+            <input
+                type="text"
+                name="username"
+                placeholder="Enter your username"
+                required
+                minlength="3"
+                maxlength="80"
+                autocomplete="username"
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                PASSWORD
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Create a password"
+                required
+                minlength="6"
+                autocomplete="new-password"
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                CONFIRM PASSWORD
+            </label>
+
+            <input
+                type="password"
+                name="confirm_password"
+                placeholder="Confirm your password"
+                required
+                minlength="6"
+                autocomplete="new-password"
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="join-btn"
+        >
+            REQUEST GUILD ACCESS
+        </button>
+
+    </form>
+
+
+    <div class="login">
+
+        Already have an account?
+
+        <a href="/login">
+            ENTER GUILD
+        </a>
+
+    </div>
+
+
+    <div class="footer">
+        ELITE FORCE • CREATED BY RAZA SHAH
+    </div>
+
+</div>
+
+
+    {% include '_pwa_install.html' %}
+</body>
+</html>

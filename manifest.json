@@ -1,0 +1,20 @@
+{
+    "id": "/",
+    "name": "ELITE FORCE",
+    "short_name": "ELITE FORCE",
+    "description": "ELITE FORCE Guild Communication System",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#05070d",
+    "theme_color": "#05070d",
+    "lang": "en",
+    "categories": ["games", "social"],
+    "icons": [
+        { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/static/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+        { "src": "/static/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}

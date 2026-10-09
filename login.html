@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>ELITE FORCE | Login</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 50% 40%,
+                    #17243a 0%,
+                    #090d15 42%,
+                    #020306 100%
+                );
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* Background glow */
+
+        .glow {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+
+            background: #168cff;
+
+            filter: blur(180px);
+            opacity: 0.12;
+
+            animation: glow 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                transform: scale(.8);
+                opacity: .08;
+            }
+
+            to {
+                transform: scale(1.2);
+                opacity: .18;
+            }
+        }
+
+        /* Login card */
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+
+            position: relative;
+            z-index: 10;
+
+            padding: 42px 35px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.08),
+                    rgba(255,255,255,.025)
+                );
+
+            border: 1px solid rgba(80,180,255,.25);
+
+            border-radius: 18px;
+
+            backdrop-filter: blur(18px);
+
+            box-shadow:
+                0 0 30px rgba(0,130,255,.12),
+                inset 0 0 25px rgba(255,255,255,.025);
+
+            animation: cardIn 1s ease forwards;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(35px) scale(.95);
+                filter: blur(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        /* Logo */
+
+        .logo {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo h1 {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 6px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #4db5ff,
+                    #ffffff
+                );
+
+            background-size: 200% auto;
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+
+            animation: shine 3s linear infinite;
+
+            text-shadow:
+                0 0 20px rgba(30,150,255,.5);
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .logo p {
+            margin-top: 8px;
+
+            font-size: 10px;
+            letter-spacing: 4px;
+
+            color: rgba(255,255,255,.45);
+        }
+
+        /* Inputs */
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+
+            margin-bottom: 8px;
+
+            font-size: 11px;
+            letter-spacing: 2px;
+
+            color: rgba(255,255,255,.55);
+        }
+
+        .input-group input {
+            width: 100%;
+
+            padding: 15px 16px;
+
+            border-radius: 10px;
+
+            border: 1px solid rgba(255,255,255,.08);
+
+            outline: none;
+
+            background: rgba(0,0,0,.35);
+
+            color: white;
+
+            font-size: 15px;
+
+            transition: .3s;
+        }
+
+        .input-group input:focus {
+            border-color: #39aaff;
+
+            box-shadow:
+                0 0 15px rgba(30,160,255,.2);
+
+            background: rgba(0,0,0,.5);
+        }
+
+        /* Login button */
+
+        .login-button {
+            width: 100%;
+
+            margin-top: 8px;
+
+            padding: 15px;
+
+            border: none;
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            color: white;
+
+            font-size: 14px;
+            font-weight: 700;
+
+            letter-spacing: 3px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #086bd8,
+                    #20a5ff,
+                    #086bd8
+                );
+
+            background-size: 200% auto;
+
+            box-shadow:
+                0 0 20px rgba(20,140,255,.25);
+
+            transition: .3s;
+
+            animation: buttonGlow 3s linear infinite;
+        }
+
+        @keyframes buttonGlow {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 0 30px rgba(20,150,255,.45);
+        }
+
+        .login-button:active {
+            transform: scale(.98);
+        }
+
+        /* Register */
+
+        .register {
+            text-align: center;
+
+            margin-top: 25px;
+
+            font-size: 12px;
+
+            color: rgba(255,255,255,.45);
+        }
+
+        .register a {
+            color: #55b8ff;
+
+            text-decoration: none;
+
+            font-weight: 700;
+        }
+
+        .register a:hover {
+            text-shadow:
+                0 0 10px #55b8ff;
+        }
+
+        /* Flash messages */
+
+        .flash {
+            margin-bottom: 20px;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            text-align: center;
+
+            font-size: 12px;
+
+            background: rgba(255,70,70,.1);
+
+            border: 1px solid rgba(255,70,70,.25);
+
+            color: #ff9a9a;
+        }
+
+        /* Scanlines */
+
+        .scanlines {
+            position: fixed;
+            inset: 0;
+
+            pointer-events: none;
+
+            background:
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 3px,
+                    rgba(255,255,255,.012) 4px
+                );
+        }
+
+        /* Mobile */
+
+        @media (max-width: 500px) {
+
+            .login-card {
+                padding: 35px 22px;
+            }
+
+            .logo h1 {
+                font-size: 32px;
+                letter-spacing: 4px;
+            }
+        }
+    
+        /* =================================================
+           RESPONSIVE (all devices)
+        ================================================= */
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .page {
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding:
+                max(20px, env(safe-area-inset-top))
+                max(16px, env(safe-area-inset-right))
+                max(20px, env(safe-area-inset-bottom))
+                max(16px, env(safe-area-inset-left));
+        }
+
+        .glow {
+            width: min(450px, 100vw);
+            height: min(450px, 100vw);
+        }
+
+        .logo h1 {
+            font-size: clamp(26px, 8.4vw, 42px);
+            letter-spacing: clamp(2px, 1.3vw, 6px);
+        }
+
+        .input-group input {
+            font-size: 16px;      /* stops iOS zoom on focus */
+            min-height: 48px;
+        }
+
+        .login-button {
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+
+        @media (max-width: 380px) {
+            .login-card { padding: 28px 18px; }
+            .logo { margin-bottom: 26px; }
+            .logo p { letter-spacing: 3px; }
+        }
+
+        @media (max-height: 560px) {
+            .page { align-items: flex-start; }
+            .login-card { margin: auto; padding: 24px 26px; }
+            .logo { margin-bottom: 18px; }
+            .input-group { margin-bottom: 14px; }
+        }
+
+        @media (min-width: 1400px) {
+            .login-card { max-width: 460px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+        }
+    </style>
+    {% include '_pwa_head.html' %}
+</head>
+
+<body>
+
+<div class="page">
+
+    <div class="glow"></div>
+
+    <div class="login-card">
+
+        <div class="logo">
+            <h1>ELITE FORCE</h1>
+            <p>GUILD COMMUNICATION SYSTEM</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+
+                {% for message in messages %}
+
+                    <div class="flash">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+
+            <div class="input-group">
+
+                <label>USERNAME</label>
+
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="Enter username"
+                    required
+                    autocomplete="username"
+                >
+
+            </div>
+
+            <div class="input-group">
+
+                <label>PASSWORD</label>
+
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Enter password"
+                    required
+                    autocomplete="current-password"
+                >
+
+            </div>
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+                ENTER GUILD
+            </button>
+
+        </form>
+
+        <div class="register">
+
+            Don't have an account?
+
+            <a href="{{ url_for('register') }}">
+                JOIN GUILD
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="scanlines"></div>
+
+    {% include '_pwa_install.html' %}
+</body>
+</html>

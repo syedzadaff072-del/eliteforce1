@@ -1,0 +1,131 @@
+{# PWA install button + service worker registration: include right before </body>.
+   Optional: {% with pwa_bottom='96px' %}{% include '_pwa_install.html' %}{% endwith %} #}
+<style>
+    #efInstallBtn {
+        position: fixed;
+        right: 16px;
+        bottom: calc({{ pwa_bottom|default('18px') }} + env(safe-area-inset-bottom, 0px));
+        z-index: 99999;
+        display: none;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 18px 11px 12px;
+        border: 1px solid rgba(120, 200, 255, .55);
+        border-radius: 999px;
+        cursor: pointer;
+        color: #fff;
+        font: 700 13px/1 "Segoe UI", Arial, sans-serif;
+        letter-spacing: 1.2px;
+        background: linear-gradient(135deg, #0a1b33, #0b2c55);
+        box-shadow: 0 0 22px rgba(56, 168, 255, .45), 0 8px 24px rgba(0, 0, 0, .55);
+        -webkit-tap-highlight-color: transparent;
+    }
+    #efInstallBtn img { width: 28px; height: 28px; border-radius: 8px; }
+    #efInstallBtn:active { transform: scale(.97); }
+
+    #efIosModal {
+        position: fixed; inset: 0; z-index: 100000; display: none;
+        align-items: flex-end; justify-content: center;
+        background: rgba(0, 0, 0, .65);
+    }
+    #efIosModal .ef-sheet {
+        width: 100%; max-width: 440px; margin: 0 12px calc(16px + env(safe-area-inset-bottom, 0px));
+        padding: 22px; border-radius: 18px; color: #e8f1ff; text-align: center;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(160deg, #0b1626, #05070d);
+        border: 1px solid rgba(120, 200, 255, .4);
+        box-shadow: 0 0 40px rgba(56, 168, 255, .3);
+    }
+    #efIosModal h3 { letter-spacing: 2px; margin-bottom: 12px; font-size: 16px; }
+    #efIosModal p { color: #9db4d2; font-size: 14px; line-height: 1.7; margin-bottom: 16px; }
+    #efIosModal button {
+        border: 0; border-radius: 10px; padding: 10px 26px; cursor: pointer;
+        font-weight: 700; color: #fff; background: linear-gradient(135deg, #38a8ff, #0077ff);
+    }
+</style>
+
+<button id="efInstallBtn" type="button" aria-label="Install ELITE FORCE app">
+    <img src="{{ url_for('static', filename='icons/icon-192.png') }}" alt="">
+    <span>INSTALL APP</span>
+</button>
+
+<div id="efIosModal" role="dialog" aria-modal="true">
+    <div class="ef-sheet">
+        <h3>INSTALL ELITE FORCE</h3>
+        <p id="efIosText"></p>
+        <button type="button" id="efIosClose">OK</button>
+    </div>
+</div>
+
+<script>
+(function () {
+    var btn = document.getElementById("efInstallBtn");
+    var modal = document.getElementById("efIosModal");
+    var modalText = document.getElementById("efIosText");
+    var deferredPrompt = null;
+
+    var ua = navigator.userAgent || "";
+    var isIOS = /iphone|ipad|ipod/i.test(ua) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true;
+
+    // ---- Service worker (root scope) ----
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+            navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function (e) {
+                console.log("PWA error:", e);
+            });
+        });
+    }
+
+    if (isStandalone) { return; }   // already installed -> no button
+
+    function show() { btn.style.display = "inline-flex"; }
+    function hide() { btn.style.display = "none"; }
+
+    // ---- Android / Chrome / Edge / Desktop ----
+    window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        show();
+    });
+
+    window.addEventListener("appinstalled", function () {
+        deferredPrompt = null;
+        hide();
+    });
+
+    // ---- iPhone / iPad Safari has no install prompt: show instructions ----
+    if (isIOS) {
+        modalText.innerHTML =
+            "Safari mein neeche <b>Share</b> button (⬆️) dabayein, phir " +
+            "<b>Add to Home Screen</b> select karein.";
+        show();
+    }
+
+    btn.addEventListener("click", function () {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function (choice) {
+                if (choice.outcome === "accepted") { hide(); }
+                deferredPrompt = null;
+            });
+        } else {
+            if (!isIOS) {
+                modalText.innerHTML =
+                    "Browser menu (⋮) kholein aur <b>Install app</b> / " +
+                    "<b>Add to Home screen</b> select karein.";
+            }
+            modal.style.display = "flex";
+        }
+    });
+
+    document.getElementById("efIosClose").addEventListener("click", function () {
+        modal.style.display = "none";
+    });
+    modal.addEventListener("click", function (e) {
+        if (e.target === modal) { modal.style.display = "none"; }
+    });
+})();
+</script>
